@@ -24,6 +24,8 @@ struct axi_hdmi_crtc {
 
 	struct dma_chan *dma;
 	struct dma_interleaved_template *dma_template;
+
+	bool is_xlnx_dma;
 };
 
 static struct axi_hdmi_crtc *plane_to_axi_hdmi_crtc(struct drm_plane *plane)
@@ -47,10 +49,12 @@ static struct dma_async_tx_descriptor *axi_hdmi_vdma_prep_interleaved_desc(
 
 	obj = drm_fb_cma_get_gem_obj(plane->state->fb, 0);
 
-	memset(&vdma_config, 0, sizeof(vdma_config));
-	vdma_config.park = 1;
-	vdma_config.coalesc = 0xff;
-	xilinx_vdma_channel_set_config(axi_hdmi_crtc->dma, &vdma_config);
+	if (axi_hdmi_crtc->is_xlnx_dma) {
+		memset(&vdma_config, 0, sizeof(vdma_config));
+		vdma_config.park = 1;
+		vdma_config.coalesc = 0xff;
+		xilinx_vdma_channel_set_config(axi_hdmi_crtc->dma, &vdma_config);
+	}
 
 	offset = plane->state->crtc_x * fb->bits_per_pixel / 8 +
 		plane->state->crtc_y * fb->pitches[0];
@@ -220,6 +224,8 @@ struct drm_crtc *axi_hdmi_crtc_create(struct drm_device *dev)
 	drm_plane_helper_add(plane, &axi_hdmi_plane_helper_funcs);
 
 	axi_hdmi_crtc->dma = p->dma;
+
+	axi_hdmi_crtc->is_xlnx_dma = p->is_xlnx_dma;
 
 	ret = drm_crtc_init_with_planes(dev, crtc, plane, NULL,
 		&axi_hdmi_crtc_funcs, NULL);

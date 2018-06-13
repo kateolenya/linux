@@ -198,6 +198,7 @@ static int axi_hdmi_platform_probe(struct platform_device *pdev)
 		return -EINVAL;
 
 	private->is_rgb = of_property_read_bool(np, "adi,is-rgb");
+	private->is_xlnx_dma = of_property_read_bool(np, "adi,is-xilinx-dma");
 
 	id = of_match_node(adv7511_encoder_of_match, np);
 

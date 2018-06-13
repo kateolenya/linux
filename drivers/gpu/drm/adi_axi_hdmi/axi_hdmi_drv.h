@@ -37,6 +37,7 @@ struct axi_hdmi_private {
 	struct dma_chan *dma;
 
 	bool is_rgb;
+	bool is_xlnx_dma;
 };
 
 struct drm_crtc* axi_hdmi_crtc_create(struct drm_device *dev);
