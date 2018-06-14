@@ -123,6 +123,7 @@ struct axi_dmac_chan {
 	bool hw_2d;
 
 	bool interleaved_cyclic;
+	bool tlast_signal;
 };
 
 struct axi_dmac {
@@ -257,6 +258,9 @@ static void axi_dmac_start_transfer(struct axi_dmac_chan *chan)
 	if (chan->hw_cyclic && desc->cyclic && !desc->vdesc.tx.callback &&
 		desc->num_sgs == 1)
 		flags |= AXI_DMAC_FLAG_CYCLIC;
+
+	if (chan->tlast_signal)
+		flags |= AXI_DMAC_FLAG_LAST;
 
 	axi_dmac_write(dmac, AXI_DMAC_REG_X_LENGTH, sg->x_len - 1);
 	axi_dmac_write(dmac, AXI_DMAC_REG_Y_LENGTH, sg->y_len - 1);
@@ -714,6 +718,9 @@ static int axi_dmac_parse_chan_dt(struct device_node *of_chan,
 
 	chan->interleaved_cyclic = of_property_read_bool(of_chan,
 			"adi,interleaved-cyclic-transfers");
+
+	chan->tlast_signal = of_property_read_bool(of_chan,
+			"adi,tlast-signal");
 
 	if (axi_dmac_dest_is_mem(chan) && axi_dmac_src_is_mem(chan))
 		chan->direction = DMA_MEM_TO_MEM;
