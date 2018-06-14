@@ -121,6 +121,8 @@ struct axi_dmac_chan {
 
 	bool hw_cyclic;
 	bool hw_2d;
+
+	bool interleaved_cyclic;
 };
 
 struct axi_dmac {
@@ -610,6 +612,9 @@ static struct dma_async_tx_descriptor *axi_dmac_prep_interleaved(
 		desc->sg[0].y_len = 1;
 	}
 
+	if (chan->hw_cyclic && chan->interleaved_cyclic)
+		desc->cyclic = true;
+
 	return vchan_tx_prep(&chan->vchan, &desc->vdesc, flags);
 }
 
@@ -706,6 +711,9 @@ static int axi_dmac_parse_chan_dt(struct device_node *of_chan,
 	chan->dest_width = val / 8;
 
 	chan->align_mask = max(chan->dest_width, chan->src_width) - 1;
+
+	chan->interleaved_cyclic = of_property_read_bool(of_chan,
+			"adi,interleaved-cyclic-transfers");
 
 	if (axi_dmac_dest_is_mem(chan) && axi_dmac_src_is_mem(chan))
 		chan->direction = DMA_MEM_TO_MEM;
